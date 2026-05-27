@@ -29,7 +29,8 @@ public class JwtAuthFilter implements GlobalFilter, Ordered {
         "/api/usuarios/registro",
         "/actuator/health",
         "/actuator/info",
-        "/api/productos"
+        "/api/productos",
+        "/api/productos/**"
     );
 
     @Override
@@ -76,8 +77,14 @@ public class JwtAuthFilter implements GlobalFilter, Ordered {
     }
 
     private boolean isPublicPath(String path) {
-        return PUBLIC_PATHS.stream().anyMatch(path::equals);
-    }
+    return PUBLIC_PATHS.stream().anyMatch(publicPath -> {
+        if (publicPath.endsWith("/**")) {
+            String prefix = publicPath.substring(0, publicPath.length() - 3);
+            return path.startsWith(prefix);
+        }
+        return path.equals(publicPath);
+    });
+}
 
     @Override
     public int getOrder() {
