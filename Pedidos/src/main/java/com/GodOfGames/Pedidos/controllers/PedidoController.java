@@ -59,7 +59,11 @@ public class PedidoController {
     @Operation(summary = "Actualizar el estado de un pedido (Ej: de PENDIENTE a COMPLETADO)")
     public ResponseEntity<PedidoResponseDTO> actualizarEstado(
             @PathVariable Long id,
-            @RequestParam EstadoPedido nuevoEstado) {
-        return ResponseEntity.ok(pedidoService.actualizarEstado(id, nuevoEstado));
+            @RequestParam EstadoPedido nuevoEstado,
+            @RequestHeader("Authorization") String authHeader) { // 🔑 Recibimos el token aquí
+
+        String token = authHeader.replace("Bearer ", ""); // Limpiamos el token
+        
+        return ResponseEntity.ok(pedidoService.actualizarEstado(id, nuevoEstado, token));
     }
 }
