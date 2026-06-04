@@ -76,4 +76,35 @@ public class ProductoService {
                     "' fue modificado por otra operación simultánea. Por favor, reintenta.");
         }
     }
+
+    // ==========================================================
+    // NUEVAS FUNCIONES DE ADMINISTRACIÓN (INYECTADAS) 🛠️
+    // ==========================================================
+
+    @Transactional
+    public ProductoDTO actualizarStockDirecto(Long id, Integer nuevoStock) {
+        // 1. Buscamos el producto por su ID
+        Producto producto = productoRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Error: Producto no encontrado con el ID: " + id));
+
+        // 2. Modificamos el stock directamente con el valor ingresado por el admin
+        producto.setStock(nuevoStock);
+
+        // 3. Guardamos los cambios en Postgres
+        Producto productoActualizado = productoRepository.save(producto);
+
+        // 4. Devolvemos el DTO con los datos actualizados
+        return convertirADto(productoActualizado);
+    }
+
+    @Transactional
+    public void eliminarProducto(Long id) {
+        // 1. Verificamos si el juego realmente existe antes de intentar borrarlo
+        if (!productoRepository.existsById(id)) {
+            throw new RuntimeException("Error: El producto que deseas eliminar no existe con el ID: " + id);
+        }
+        
+        // 2. Lo eliminamos físicamente de la base de datos
+        productoRepository.deleteById(id);
+    }
 }

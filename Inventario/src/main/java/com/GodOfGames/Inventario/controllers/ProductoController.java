@@ -11,6 +11,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/productos")
+@CrossOrigin(origins = "*") // Añadimos esto para evitar problemas de CORS con tu Frontend en React
 public class ProductoController {
 
     @Autowired
@@ -19,7 +20,6 @@ public class ProductoController {
     // GET: http://localhost:8082/api/productos
     @GetMapping
     public ResponseEntity<List<ProductoDTO>> listarTodos() {
-        // Ahora devuelve una lista de DTOs, no de Entidades
         return ResponseEntity.ok(productoService.obtenerTodos());
     }
 
@@ -32,15 +32,28 @@ public class ProductoController {
     // POST: http://localhost:8082/api/productos
     @PostMapping
     public ResponseEntity<ProductoDTO> crearProducto(@RequestBody Producto producto) {
-        // Recibe los datos, los guarda y devuelve la versión limpia (DTO)
         return ResponseEntity.ok(productoService.guardarProducto(producto));
     }
 
-   // POST: http://localhost:8082/api/productos/1/reservar?cantidad=2
+    // POST: http://localhost:8082/api/productos/1/reservar?cantidad=2
     @PostMapping("/{id}/reservar")
     public ResponseEntity<ProductoDTO> reservarStock(@PathVariable Long id, @RequestParam Integer cantidad) {
-        // Si hay error de stock, salta al GlobalExceptionHandler automáticamente
         ProductoDTO productoActualizado = productoService.reservarStock(id, cantidad);
         return ResponseEntity.ok(productoActualizado);
     }
+
+    // PUT: http://localhost:8082/api/productos/1/stock?nuevoStock=50
+    @PutMapping("/{id}/stock")
+    public ResponseEntity<ProductoDTO> actualizarStockAdmin(@PathVariable Long id, @RequestParam Integer nuevoStock) {
+        // Llama al servicio para sobreescribir el stock directamente
+        ProductoDTO productoActualizado = productoService.actualizarStockDirecto(id, nuevoStock);
+        return ResponseEntity.ok(productoActualizado);
     }
+
+    // DELETE: http://localhost:8082/api/productos/1
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> eliminarProducto(@PathVariable Long id) {
+        productoService.eliminarProducto(id);
+        return ResponseEntity.noContent().build(); // Devuelve un estado 204 (Todo OK, sin contenido que mostrar)
+    }
+}
