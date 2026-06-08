@@ -46,7 +46,7 @@ services:
     build: ./Usuarios
     container_name: usuarios-service
     ports:
-      - "8085:8081"
+      - "8081:8081"
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-service:5432/godofgames_usuarios
       SPRING_DATASOURCE_USERNAME: postgres
@@ -105,7 +105,7 @@ services:
     build: ./Gateway
     container_name: gateway
     ports:
-      - "8089:8080"
+      - "8080:8080"
     depends_on:
       - usuarios-service
       - inventario-service
