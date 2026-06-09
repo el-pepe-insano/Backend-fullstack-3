@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: inventario-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: inventario
+  template:
+    metadata:
+      labels:
+        app: inventario
+    spec:
+      containers:
+      - name: inventario-app
+        image: ryuko67/godofgames-inventario:v2
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8082
+        env:
+        - name: JWT_SECRET
+          value: "requiemElMejorJuegoDeGodOfGames2026SecretKeyParaJWT12345678901234"
+        - name: SPRING_DATASOURCE_URL
+          value: jdbc:postgresql://postgres-service:5432/godofgames_inventario
+        - name: SPRING_DATASOURCE_USERNAME
+          value: "postgres"
+        - name: SPRING_DATASOURCE_PASSWORD
+          value: "Bullseye"
+        readinessProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8082
+          initialDelaySeconds: 60
+          periodSeconds: 10
+          failureThreshold: 5
+        livenessProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8082
+          initialDelaySeconds: 90
+          periodSeconds: 15
+          failureThreshold: 5
