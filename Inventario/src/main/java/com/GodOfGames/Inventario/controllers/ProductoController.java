@@ -11,7 +11,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/productos")
-@CrossOrigin(origins = "*") // Añadimos esto para evitar problemas de CORS con tu Frontend en React
 public class ProductoController {
 
     @Autowired
