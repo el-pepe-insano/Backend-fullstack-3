@@ -33,16 +33,8 @@ public class DataInitializer {
                         .rol(Rol.CLIENTE)
                         .build();
 
-                Usuario transportista = Usuario.builder()
-                        .nombre("Logística Express")
-                        .correo("envios@godofgames.com")
-                        .contraseña(passwordEncoder.encode("envios123"))
-                        .rol(Rol.TRANSPORTISTA)
-                        .build();
-
                 usuarioRepository.save(admin);
                 usuarioRepository.save(cliente);
-                usuarioRepository.save(transportista);
 
                 System.out.println("Precarga completada. Usuarios base instalados y encriptados con el ADMIN maestro.");
             }

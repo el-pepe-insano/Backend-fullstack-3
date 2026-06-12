@@ -1,0 +1,3 @@
+CREATE DATABASE godofgames_usuarios;
+CREATE DATABASE godofgames_inventario;
+CREATE DATABASE godofgames_pedidos;
