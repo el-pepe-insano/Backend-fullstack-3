@@ -1,5 +1,4 @@
-package com.GodOfGames.Usuarios.Z.models;
-
+﻿package com.GodOfGames.Usuarios.Z.models;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -13,7 +12,6 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 public class Usuario {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -23,19 +21,25 @@ public class Usuario {
     private String nombre;
 
     @NotBlank(message = "El correo es obligatorio.")
-    @Email(message = "El formato del correo electrónico no es válido.")
+    @Email(message = "El formato del correo electronico no es valido.")
     @Column(nullable = false, unique = true)
     private String correo;
 
-    @NotBlank(message = "La contraseña es obligatoria.")
+    @NotBlank(message = "La contrasena es obligatoria.")
     @Pattern(
         regexp = "^(?=.*[0-9])(?=.*[!@#$%^&*()_+\\-=\\[\\]{};':\"\\\\|,.<>\\/?]).{8,}$",
-        message = "La contraseña debe tener mínimo 8 caracteres, al menos un número y un carácter especial (!@#$%^&*...)"
+        message = "La contrasena debe tener minimo 8 caracteres, al menos un numero y un caracter especial"
     )
     @Column(nullable = false)
-    private String contraseña;
+    private String contrasena;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Rol rol;
+
+    @Column(nullable = false)
+    private boolean activo = true;
+
+    @Column
+    private String fotoPerfil;
 }
