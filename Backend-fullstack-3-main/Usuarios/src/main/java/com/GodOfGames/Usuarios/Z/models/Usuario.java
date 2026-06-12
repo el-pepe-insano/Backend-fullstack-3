@@ -38,4 +38,10 @@ public class Usuario {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Rol rol;
+
+    @Column(nullable = false)
+    private boolean activo = true;
+
+    @Column
+    private String fotoPerfil;
 }

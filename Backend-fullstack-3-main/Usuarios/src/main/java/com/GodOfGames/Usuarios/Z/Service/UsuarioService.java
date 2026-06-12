@@ -4,9 +4,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import com.GodOfGames.Usuarios.Z.models.Rol; // AGREGADO: Importación del Enum de Roles
+import com.GodOfGames.Usuarios.Z.models.Rol; 
 import com.GodOfGames.Usuarios.Z.models.Usuario;
 import com.GodOfGames.Usuarios.Z.repositories.UsuarioRepository;
+import com.GodOfGames.Usuarios.dto.ActualizarPerfilDTO;
 
 import java.util.List;
 import java.util.Optional;
@@ -109,4 +110,30 @@ public class UsuarioService {
     public List<Usuario> listarUsuarios() {
         return usuarioRepository.findAll();
     }
+
+    public Usuario actualizarPerfil(Long id, ActualizarPerfilDTO dto) {
+    return usuarioRepository.findById(id).map(usuario -> {
+        if (dto.getNombre() != null && !dto.getNombre().isBlank()) {
+            usuario.setNombre(dto.getNombre());
+        }
+        if (dto.getFotoPerfil() != null && !dto.getFotoPerfil().isBlank()) {
+            usuario.setFotoPerfil(dto.getFotoPerfil());
+        }
+        if (dto.getContrasenaNueva() != null && !dto.getContrasenaNueva().isBlank()) {
+            if (!passwordEncoder.matches(dto.getContrasenaActual(), usuario.getContraseña())) {
+                throw new RuntimeException("La contraseña actual es incorrecta.");
+            }
+            usuario.setContraseña(passwordEncoder.encode(dto.getContrasenaNueva()));
+        }
+        return usuarioRepository.save(usuario);
+    }).orElseThrow(() -> new RuntimeException("Usuario no encontrado."));
+}
+
+    public Usuario toggleActivarUsuario(Long id) {
+    return usuarioRepository.findById(id).map(usuario -> {
+        usuario.setActivo(!usuario.isActivo());
+        log.info("Usuario ID {} -> activo: {}", id, usuario.isActivo());
+        return usuarioRepository.save(usuario);
+    }).orElseThrow(() -> new RuntimeException("Usuario no encontrado."));
+}
 }

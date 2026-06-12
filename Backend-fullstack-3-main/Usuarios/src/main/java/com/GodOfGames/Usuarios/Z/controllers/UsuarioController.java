@@ -8,6 +8,8 @@ import org.springframework.web.bind.annotation.*;
 import com.GodOfGames.Usuarios.Z.Service.UsuarioService;
 import com.GodOfGames.Usuarios.Z.config.JwtUtil;
 import com.GodOfGames.Usuarios.Z.models.Usuario;
+import com.GodOfGames.Usuarios.dto.ActualizarPerfilDTO;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -66,4 +68,18 @@ public class UsuarioController {
         usuarios.forEach(u -> u.setContraseña(null));
         return ResponseEntity.ok(usuarios);
     }
+    @PatchMapping("/{id}/perfil")
+    public ResponseEntity<Usuario> actualizarPerfil(@PathVariable Long id,
+                                                 @RequestBody ActualizarPerfilDTO dto) {
+    Usuario actualizado = usuarioService.actualizarPerfil(id, dto);
+    actualizado.setContraseña(null);
+    return ResponseEntity.ok(actualizado);
+}
+
+   @PatchMapping("/{id}/toggle-activo")
+    public ResponseEntity<Usuario> toggleActivo(@PathVariable Long id) {
+    Usuario actualizado = usuarioService.toggleActivarUsuario(id);
+    actualizado.setContraseña(null);
+    return ResponseEntity.ok(actualizado);
+}
 }
