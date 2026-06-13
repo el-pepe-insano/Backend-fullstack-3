@@ -1,5 +1,6 @@
-package com.GodOfGames.Inventario.services;
+﻿package com.GodOfGames.Inventario.services;
 
+import com.GodOfGames.Inventario.dtos.ActualizarProductoDTO;
 import com.GodOfGames.Inventario.dtos.ProductoDTO;
 import com.GodOfGames.Inventario.model.Producto;
 import com.GodOfGames.Inventario.repositories.ProductoRepository;
@@ -37,22 +38,21 @@ public class ProductoService {
 
     public ProductoDTO obtenerPorId(Long id) {
         Producto producto = productoRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Error: Producto no encontrado con el ID: " + id));
+                .orElseThrow(() -> new RuntimeException("Producto no encontrado con ID: " + id));
         return convertirADto(producto);
     }
 
     public ProductoDTO guardarProducto(Producto producto) {
-        Producto productoGuardado = productoRepository.save(producto);
-        return convertirADto(productoGuardado);
+        return convertirADto(productoRepository.save(producto));
     }
 
     @Transactional
     public ProductoDTO reservarStock(Long id, Integer cantidad) {
         Producto producto = productoRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Error: Producto no encontrado con el ID: " + id));
+                .orElseThrow(() -> new RuntimeException("Producto no encontrado con ID: " + id));
 
         if (producto.getStock() < cantidad) {
-            throw new RuntimeException("¡Stock insuficiente! Solo quedan " + producto.getStock() + " copias de " + producto.getNombre());
+            throw new RuntimeException("Stock insuficiente. Solo quedan " + producto.getStock() + " copias de " + producto.getNombre());
         }
 
         producto.setStock(producto.getStock() - cantidad);
@@ -60,51 +60,54 @@ public class ProductoService {
         try {
             Producto productoActualizado = productoRepository.save(producto);
             ProductoDTO dto = convertirADto(productoActualizado);
-            
-            // Generar GameKey única (Formato: GOG-XXXX-XXXX-XXXX)
+
             String uuid = UUID.randomUUID().toString().replace("-", "").toUpperCase();
-            String claveGenerada = String.format("GOG-%s-%s-%s", 
-                uuid.substring(0, 4), 
-                uuid.substring(4, 8), 
+            String claveGenerada = String.format("GOG-%s-%s-%s",
+                uuid.substring(0, 4),
+                uuid.substring(4, 8),
                 uuid.substring(8, 12));
-            
+
             dto.setClaveJuego(claveGenerada);
-            
             return dto;
         } catch (OptimisticLockException e) {
-            throw new RuntimeException("Conflicto de concurrencia: el stock de '" + producto.getNombre() +
-                    "' fue modificado por otra operación simultánea. Por favor, reintenta.");
+            throw new RuntimeException("Conflicto de concurrencia en stock de '" + producto.getNombre() + "'. Reintenta.");
         }
     }
 
-    // ==========================================================
-    // NUEVAS FUNCIONES DE ADMINISTRACIÓN (INYECTADAS) 🛠️
-    // ==========================================================
-
     @Transactional
     public ProductoDTO actualizarStockDirecto(Long id, Integer nuevoStock) {
-        // 1. Buscamos el producto por su ID
         Producto producto = productoRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Error: Producto no encontrado con el ID: " + id));
-
-        // 2. Modificamos el stock directamente con el valor ingresado por el admin
+                .orElseThrow(() -> new RuntimeException("Producto no encontrado con ID: " + id));
         producto.setStock(nuevoStock);
+        return convertirADto(productoRepository.save(producto));
+    }
 
-        // 3. Guardamos los cambios en Postgres
-        Producto productoActualizado = productoRepository.save(producto);
+    @Transactional
+    public ProductoDTO actualizarProducto(Long id, ActualizarProductoDTO dto) {
+        Producto producto = productoRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Producto no encontrado con ID: " + id));
 
-        // 4. Devolvemos el DTO con los datos actualizados
-        return convertirADto(productoActualizado);
+        if (dto.getNombre() != null && !dto.getNombre().isBlank()) {
+            producto.setNombre(dto.getNombre());
+        }
+        if (dto.getDescripcion() != null) {
+            producto.setDescripcion(dto.getDescripcion());
+        }
+        if (dto.getPrecio() != null) {
+            producto.setPrecio(dto.getPrecio());
+        }
+        if (dto.getStock() != null) {
+            producto.setStock(dto.getStock());
+        }
+
+        return convertirADto(productoRepository.save(producto));
     }
 
     @Transactional
     public void eliminarProducto(Long id) {
-        // 1. Verificamos si el juego realmente existe antes de intentar borrarlo
         if (!productoRepository.existsById(id)) {
-            throw new RuntimeException("Error: El producto que deseas eliminar no existe con el ID: " + id);
+            throw new RuntimeException("El producto no existe con ID: " + id);
         }
-        
-        // 2. Lo eliminamos físicamente de la base de datos
         productoRepository.deleteById(id);
     }
 }
