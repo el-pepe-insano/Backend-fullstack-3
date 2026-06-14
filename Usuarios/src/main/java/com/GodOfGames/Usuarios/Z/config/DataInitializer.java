@@ -1,4 +1,4 @@
-﻿package com.GodOfGames.Usuarios.Z.config;
+package com.GodOfGames.Usuarios.Z.config;
 
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
@@ -25,6 +25,14 @@ public class DataInitializer {
                         .activo(true)
                         .build();
 
+                 Usuario admin2 = Usuario.builder()
+                        .nombre("Dante")
+                        .correo("dante@godofgames.com")
+                        .contrasena(passwordEncoder.encode("Contraseña123"))
+                        .rol(Rol.ADMIN)
+                        .activo(true)
+                        .build();        
+                        
                 Usuario cliente = Usuario.builder()
                         .nombre("Jugador Uno")
                         .correo("cliente@godofgames.com")
@@ -34,6 +42,7 @@ public class DataInitializer {
                         .build();
 
                 usuarioRepository.save(admin);
+                usuarioRepository.save(admin2);
                 usuarioRepository.save(cliente);
 
                 System.out.println("Precarga completada.");

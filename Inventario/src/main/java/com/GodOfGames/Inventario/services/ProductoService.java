@@ -1,4 +1,4 @@
-﻿package com.GodOfGames.Inventario.services;
+package com.GodOfGames.Inventario.services;
 
 import com.GodOfGames.Inventario.dtos.ActualizarProductoDTO;
 import com.GodOfGames.Inventario.dtos.ProductoDTO;
@@ -102,6 +102,12 @@ public class ProductoService {
 
         return convertirADto(productoRepository.save(producto));
     }
+
+       
+         @Transactional
+          public List<Producto> ListarProductoBusqueda(String busqueda) {
+             return productoRepository.buscarPorNombre(busqueda);
+         }
 
     @Transactional
     public void eliminarProducto(Long id) {

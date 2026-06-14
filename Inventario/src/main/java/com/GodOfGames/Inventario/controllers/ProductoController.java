@@ -1,4 +1,4 @@
-﻿package com.GodOfGames.Inventario.controllers;
+package com.GodOfGames.Inventario.controllers;
 
 import com.GodOfGames.Inventario.dtos.ActualizarProductoDTO;
 import com.GodOfGames.Inventario.dtos.ProductoDTO;
@@ -12,7 +12,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/productos")
-@CrossOrigin(origins = "*")
 public class ProductoController {
 
     @Autowired
@@ -22,6 +21,12 @@ public class ProductoController {
     public ResponseEntity<List<ProductoDTO>> listarTodos() {
         return ResponseEntity.ok(productoService.obtenerTodos());
     }
+
+    @GetMapping("/buscar/{Busqueda}")
+    public ResponseEntity<List<Producto>> listarPorNombre(@PathVariable String Busqueda) {
+        return ResponseEntity.ok(productoService.ListarProductoBusqueda(Busqueda));
+    }
+
 
     @GetMapping("/{id}")
     public ResponseEntity<ProductoDTO> obtenerPorId(@PathVariable Long id) {

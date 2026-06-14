@@ -1,4 +1,4 @@
-﻿package com.GodOfGames.Usuarios.Z.Service;
+package com.GodOfGames.Usuarios.Z.Service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -82,9 +82,6 @@ public class UsuarioService {
         return usuarioRepository.findById(id).map(usuario -> {
             if (dto.getNombre() != null && !dto.getNombre().isBlank()) {
                 usuario.setNombre(dto.getNombre());
-            }
-            if (dto.getFotoPerfil() != null && !dto.getFotoPerfil().isBlank()) {
-                usuario.setFotoPerfil(dto.getFotoPerfil());
             }
             if (dto.getContrasenaNueva() != null && !dto.getContrasenaNueva().isBlank()) {
                 if (!passwordEncoder.matches(dto.getContrasenaActual(), usuario.getContrasena())) {

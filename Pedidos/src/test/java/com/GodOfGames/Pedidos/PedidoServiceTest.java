@@ -1,4 +1,4 @@
-﻿package com.GodOfGames.Pedidos;
+package com.GodOfGames.Pedidos;
 
 import com.GodOfGames.Pedidos.dtos.PedidoResponseDTO;
 import com.GodOfGames.Pedidos.models.EstadoPedido;

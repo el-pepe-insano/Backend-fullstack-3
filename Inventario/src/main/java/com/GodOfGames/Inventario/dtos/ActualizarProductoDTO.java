@@ -1,4 +1,4 @@
-﻿package com.GodOfGames.Inventario.dtos;
+package com.GodOfGames.Inventario.dtos;
 
 import lombok.Data;
 

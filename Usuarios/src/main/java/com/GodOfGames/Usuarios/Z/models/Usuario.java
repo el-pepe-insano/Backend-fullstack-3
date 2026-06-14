@@ -1,4 +1,4 @@
-﻿package com.GodOfGames.Usuarios.Z.models;
+package com.GodOfGames.Usuarios.Z.models;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -40,6 +40,4 @@ public class Usuario {
     @Column(nullable = false)
     private boolean activo = true;
 
-    @Column
-    private String fotoPerfil;
 }

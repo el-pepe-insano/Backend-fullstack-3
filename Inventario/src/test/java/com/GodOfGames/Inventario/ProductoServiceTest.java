@@ -1,4 +1,4 @@
-﻿package com.GodOfGames.Inventario;
+package com.GodOfGames.Inventario;
 
 import com.GodOfGames.Inventario.dtos.ProductoDTO;
 import com.GodOfGames.Inventario.model.Producto;
