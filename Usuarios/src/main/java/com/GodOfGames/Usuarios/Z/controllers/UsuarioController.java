@@ -1,4 +1,4 @@
-﻿package com.GodOfGames.Usuarios.Z.controllers;
+package com.GodOfGames.Usuarios.Z.controllers;
 
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
@@ -15,7 +15,6 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/usuarios")
-@CrossOrigin(origins = "*")
 @Slf4j
 public class UsuarioController {
 

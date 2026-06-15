@@ -1,4 +1,4 @@
-﻿package com.GodOfGames.Usuarios.Z.messaging;
+package com.GodOfGames.Usuarios.Z.messaging;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

@@ -1,4 +1,4 @@
-﻿package com.GodOfGames.Usuarios.Z.config;
+package com.GodOfGames.Usuarios.Z.config;
 
 import org.springframework.amqp.core.*;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;

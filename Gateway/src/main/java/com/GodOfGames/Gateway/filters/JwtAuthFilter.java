@@ -27,6 +27,8 @@ public class JwtAuthFilter implements GlobalFilter, Ordered {
     private static final List<String> PUBLIC_PATHS = List.of(
         "/api/usuarios/login",
         "/api/usuarios/registro",
+        "/api/usuarios/cambiar-contrasena",
+        "/api/usuarios/recuperar-contrasena",
         "/actuator/health",
         "/actuator/info",
         "/api/productos",

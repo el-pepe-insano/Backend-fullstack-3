@@ -1,4 +1,4 @@
-﻿package com.GodOfGames.Usuarios.Z.Service;
+package com.GodOfGames.Usuarios.Z.Service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -86,7 +86,9 @@ public class UsuarioService {
     public Usuario actualizarPerfil(Long id, ActualizarPerfilDTO dto) {
         return usuarioRepository.findById(id).map(usuario -> {
             if (dto.getNombre() != null && !dto.getNombre().isBlank()) usuario.setNombre(dto.getNombre());
-            if (dto.getFotoPerfil() != null && !dto.getFotoPerfil().isBlank()) usuario.setFotoPerfil(dto.getFotoPerfil());
+
+            if (dto.getFotoPerfil() != null && !dto.getFotoPerfil().isBlank());
+            
             if (dto.getContrasenaNueva() != null && !dto.getContrasenaNueva().isBlank()) {
                 if (!passwordEncoder.matches(dto.getContrasenaActual(), usuario.getContrasena())) {
                     throw new RuntimeException("La contrasena actual es incorrecta.");

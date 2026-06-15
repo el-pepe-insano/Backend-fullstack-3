@@ -1,4 +1,4 @@
-﻿package com.GodOfGames.Usuarios.dto;
+package com.GodOfGames.Usuarios.dto;
 
 import lombok.Data;
 
