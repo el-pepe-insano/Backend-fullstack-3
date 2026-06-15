@@ -1,4 +1,4 @@
-package com.GodOfGames.Usuarios.Z.controllers;
+﻿package com.GodOfGames.Usuarios.Z.controllers;
 
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
@@ -9,11 +9,13 @@ import com.GodOfGames.Usuarios.Z.Service.UsuarioService;
 import com.GodOfGames.Usuarios.Z.config.JwtUtil;
 import com.GodOfGames.Usuarios.Z.models.Usuario;
 import com.GodOfGames.Usuarios.dto.ActualizarPerfilDTO;
+import com.GodOfGames.Usuarios.dto.CambiarContrasenaDTO;
 import java.util.HashMap;
 import java.util.Map;
 
 @RestController
 @RequestMapping("/api/usuarios")
+@CrossOrigin(origins = "*")
 @Slf4j
 public class UsuarioController {
 
@@ -76,6 +78,15 @@ public class UsuarioController {
         usuarioService.solicitarRecuperacion(correo);
         Map<String, String> respuesta = new HashMap<>();
         respuesta.put("mensaje", "Codigo de recuperacion enviado al correo.");
+        return ResponseEntity.ok(respuesta);
+    }
+
+    @PostMapping("/cambiar-contrasena")
+    public ResponseEntity<Map<String, String>> cambiarContrasena(@RequestBody CambiarContrasenaDTO dto) {
+        log.info("POST /api/usuarios/cambiar-contrasena para: {}", dto.getCorreo());
+        usuarioService.cambiarContrasenaConCodigo(dto);
+        Map<String, String> respuesta = new HashMap<>();
+        respuesta.put("mensaje", "Contrasena cambiada exitosamente.");
         return ResponseEntity.ok(respuesta);
     }
 
