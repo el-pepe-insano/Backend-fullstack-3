@@ -1,4 +1,4 @@
-﻿package com.GodOfGames.Notificaciones;
+package com.GodOfGames.Notificaciones;
 
 import com.GodOfGames.Notificaciones.models.CodigoRecuperacion;
 import com.GodOfGames.Notificaciones.repositories.CodigoRecuperacionRepository;
