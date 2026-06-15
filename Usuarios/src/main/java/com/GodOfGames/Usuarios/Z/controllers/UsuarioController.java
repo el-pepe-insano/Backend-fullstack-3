@@ -70,6 +70,15 @@ public class UsuarioController {
         return ResponseEntity.ok(actualizado);
     }
 
+    @PostMapping("/recuperar-contrasena")
+    public ResponseEntity<Map<String, String>> recuperarContrasena(@RequestParam String correo) {
+        log.info("POST /api/usuarios/recuperar-contrasena para: {}", correo);
+        usuarioService.solicitarRecuperacion(correo);
+        Map<String, String> respuesta = new HashMap<>();
+        respuesta.put("mensaje", "Codigo de recuperacion enviado al correo.");
+        return ResponseEntity.ok(respuesta);
+    }
+
     @GetMapping
     public ResponseEntity<Iterable<Usuario>> listarTodos() {
         log.info("GET /api/usuarios");

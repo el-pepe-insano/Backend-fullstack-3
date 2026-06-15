@@ -1,8 +1,11 @@
 package com.GodOfGames.Usuarios.Z.Service;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import com.GodOfGames.Usuarios.Z.config.RabbitMQConfig;
+import com.GodOfGames.Usuarios.Z.messaging.RecuperacionEvent;
 import com.GodOfGames.Usuarios.Z.models.Rol;
 import com.GodOfGames.Usuarios.Z.models.Usuario;
 import com.GodOfGames.Usuarios.Z.repositories.UsuarioRepository;
@@ -16,10 +19,12 @@ public class UsuarioService {
 
     private final UsuarioRepository usuarioRepository;
     private final PasswordEncoder passwordEncoder;
+    private final RabbitTemplate rabbitTemplate;
 
-    public UsuarioService(UsuarioRepository usuarioRepository, PasswordEncoder passwordEncoder) {
+    public UsuarioService(UsuarioRepository usuarioRepository, PasswordEncoder passwordEncoder, RabbitTemplate rabbitTemplate) {
         this.usuarioRepository = usuarioRepository;
         this.passwordEncoder = passwordEncoder;
+        this.rabbitTemplate = rabbitTemplate;
     }
 
     public Usuario registrarUsuario(Usuario nuevoUsuario) {
@@ -99,6 +104,14 @@ public class UsuarioService {
             log.info("Usuario ID {} -> activo: {}", id, usuario.isActivo());
             return usuarioRepository.save(usuario);
         }).orElseThrow(() -> new RuntimeException("Usuario no encontrado."));
+    }
+
+    public void solicitarRecuperacion(String correo) {
+        Usuario usuario = usuarioRepository.findByCorreo(correo)
+                .orElseThrow(() -> new RuntimeException("No existe una cuenta con ese correo."));
+        RecuperacionEvent event = new RecuperacionEvent(usuario.getCorreo(), usuario.getNombre());
+        rabbitTemplate.convertAndSend(RabbitMQConfig.EXCHANGE, "recuperacion.contrasena", event);
+        log.info("Evento de recuperacion enviado para: {}", correo);
     }
 
     public List<Usuario> listarUsuarios() {

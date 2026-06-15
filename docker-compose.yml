@@ -1,6 +1,5 @@
-services:
+﻿services:
 
-  # ── Bases de datos ──────────────────────────────────────────
   postgres:
     image: postgres:16
     container_name: postgres-service
@@ -41,7 +40,6 @@ services:
       retries: 10
       start_period: 60s
 
-  # ── Microservicios ──────────────────────────────────────────
   usuarios-service:
     build: ./Usuarios
     container_name: usuarios-service
@@ -51,8 +49,35 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-service:5432/godofgames_usuarios
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: Bullseye
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_PORT: 5672
+      SPRING_RABBITMQ_USERNAME: guest
+      SPRING_RABBITMQ_PASSWORD: guest
     depends_on:
       postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - godofgames-net
+
+  notificaciones-service:
+    build: ./Notificaciones
+    container_name: notificaciones-service
+    ports:
+      - "8088:8088"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-service:5432/godofgames_notificaciones
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: Bullseye
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_PORT: 5672
+      SPRING_RABBITMQ_USERNAME: guest
+      SPRING_RABBITMQ_PASSWORD: guest
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
         condition: service_healthy
     networks:
       - godofgames-net
@@ -110,6 +135,7 @@ services:
       - usuarios-service
       - inventario-service
       - pedidos-service
+      - notificaciones-service
     networks:
       - godofgames-net
 
