@@ -12,6 +12,7 @@ import com.GodOfGames.Usuarios.Z.models.Usuario;
 import com.GodOfGames.Usuarios.Z.repositories.UsuarioRepository;
 import com.GodOfGames.Usuarios.dto.ActualizarPerfilDTO;
 import com.GodOfGames.Usuarios.dto.CambiarContrasenaDTO;
+import com.GodOfGames.Usuarios.dto.CambiarContrasenasincodigoDTO;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -66,38 +67,23 @@ public class UsuarioService {
         throw new RuntimeException("Credenciales invalidas.");
     }
 
-    public Usuario actualizarUsuario(Long id, Usuario datosActualizados) {
-        return usuarioRepository.findById(id).map(usuarioExistente -> {
-            usuarioExistente.setNombre(datosActualizados.getNombre());
-            if (datosActualizados.getContrasena() != null && !datosActualizados.getContrasena().isEmpty()) {
-                usuarioExistente.setContrasena(passwordEncoder.encode(datosActualizados.getContrasena()));
-            }
-            if (datosActualizados.getRol() == Rol.ADMIN) {
-                if (usuarioExistente.getCorreo().trim().toLowerCase().equals("diego@godofgames.com")) {
-                    usuarioExistente.setRol(Rol.ADMIN);
-                }
-            } else {
-                usuarioExistente.setRol(datosActualizados.getRol());
-            }
-            return usuarioRepository.save(usuarioExistente);
-        }).orElseThrow(() -> new RuntimeException("Error: Usuario no encontrado."));
-    }
+    public Usuario actualizarUsuario(Long id, ActualizarPerfilDTO datosActualizados) {
+    return usuarioRepository.findById(id).map(usuarioExistente -> {
+        usuarioExistente.setNombre(datosActualizados.getNombre());
 
-    public Usuario actualizarPerfil(Long id, ActualizarPerfilDTO dto) {
-        return usuarioRepository.findById(id).map(usuario -> {
-            if (dto.getNombre() != null && !dto.getNombre().isBlank()) usuario.setNombre(dto.getNombre());
-
-            if (dto.getFotoPerfil() != null && !dto.getFotoPerfil().isBlank());
-            
-            if (dto.getContrasenaNueva() != null && !dto.getContrasenaNueva().isBlank()) {
-                if (!passwordEncoder.matches(dto.getContrasenaActual(), usuario.getContrasena())) {
-                    throw new RuntimeException("La contrasena actual es incorrecta.");
-                }
-                usuario.setContrasena(passwordEncoder.encode(dto.getContrasenaNueva()));
+        // Verificar que el nuevo correo no esté en uso por otro usuario
+        String nuevoCorreo = datosActualizados.getCorreo().trim().toLowerCase();
+        if (!nuevoCorreo.equals(usuarioExistente.getCorreo())) {
+            if (usuarioRepository.findByCorreo(nuevoCorreo).isPresent()) {
+                throw new RuntimeException("Error: El correo ya está registrado por otro usuario.");
             }
-            return usuarioRepository.save(usuario);
-        }).orElseThrow(() -> new RuntimeException("Usuario no encontrado."));
-    }
+            usuarioExistente.setCorreo(nuevoCorreo);
+        }
+
+        return usuarioRepository.save(usuarioExistente);
+    }).orElseThrow(() -> new RuntimeException("Error: Usuario no encontrado."));
+}
+
 
     public Usuario toggleActivarUsuario(Long id) {
         return usuarioRepository.findById(id).map(usuario -> {
@@ -133,6 +119,24 @@ public class UsuarioService {
         usuarioRepository.save(usuario);
         log.info("Contrasena cambiada exitosamente para: {}", dto.getCorreo());
     }
+
+
+    public void cambiarContrasena(CambiarContrasenasincodigoDTO dto) {
+    Usuario usuario = usuarioRepository.findByCorreo(dto.getCorreo())
+            .orElseThrow(() -> new RuntimeException("Usuario no encontrado."));
+
+    if (!passwordEncoder.matches(dto.getContrasenaActual(), usuario.getContrasena())) {
+        throw new RuntimeException("La contraseña actual es incorrecta.");
+    }
+
+    if (passwordEncoder.matches(dto.getNuevaContrasena(), usuario.getContrasena())) {
+        throw new RuntimeException("La nueva contraseña no puede ser igual a la actual.");
+    }
+
+    usuario.setContrasena(passwordEncoder.encode(dto.getNuevaContrasena()));
+    usuarioRepository.save(usuario);
+    log.info("Contrasena cambiada exitosamente para: {}", dto.getCorreo());
+}
 
     public List<Usuario> listarUsuarios() {
         return usuarioRepository.findAll();

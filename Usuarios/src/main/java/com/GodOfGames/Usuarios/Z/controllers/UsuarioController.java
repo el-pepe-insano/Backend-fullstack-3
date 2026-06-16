@@ -10,6 +10,8 @@ import com.GodOfGames.Usuarios.Z.config.JwtUtil;
 import com.GodOfGames.Usuarios.Z.models.Usuario;
 import com.GodOfGames.Usuarios.dto.ActualizarPerfilDTO;
 import com.GodOfGames.Usuarios.dto.CambiarContrasenaDTO;
+import com.GodOfGames.Usuarios.dto.CambiarContrasenasincodigoDTO;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -48,20 +50,13 @@ public class UsuarioController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Usuario> actualizar(@PathVariable Long id, @Valid @RequestBody Usuario usuario) {
+    public ResponseEntity<Usuario> actualizar(@PathVariable Long id, @Valid @RequestBody ActualizarPerfilDTO dto) {
         log.info("PUT /api/usuarios/{}", id);
-        Usuario usuarioActualizado = usuarioService.actualizarUsuario(id, usuario);
+        Usuario usuarioActualizado = usuarioService.actualizarUsuario(id, dto);
         usuarioActualizado.setContrasena(null);
         return ResponseEntity.ok(usuarioActualizado);
     }
 
-    @PatchMapping("/{id}/perfil")
-    public ResponseEntity<Usuario> actualizarPerfil(@PathVariable Long id, @RequestBody ActualizarPerfilDTO dto) {
-        log.info("PATCH /api/usuarios/{}/perfil", id);
-        Usuario actualizado = usuarioService.actualizarPerfil(id, dto);
-        actualizado.setContrasena(null);
-        return ResponseEntity.ok(actualizado);
-    }
 
     @PatchMapping("/{id}/toggle-activo")
     public ResponseEntity<Usuario> toggleActivo(@PathVariable Long id) {
@@ -88,6 +83,16 @@ public class UsuarioController {
         respuesta.put("mensaje", "Contrasena cambiada exitosamente.");
         return ResponseEntity.ok(respuesta);
     }
+
+   @PostMapping("/cambiar-contrasena-sin-codigo")
+    public ResponseEntity<Map<String, String>> cambiarContrasenasincodigo(@Valid @RequestBody CambiarContrasenasincodigoDTO dto) {
+    log.info("POST /api/usuarios/cambiar-contrasena para: {}", dto.getCorreo());
+    usuarioService.cambiarContrasena(dto);
+    Map<String, String> respuesta = new HashMap<>();
+    respuesta.put("mensaje", "Contrasena cambiada exitosamente.");
+    return ResponseEntity.ok(respuesta);
+    }
+    
 
     @GetMapping
     public ResponseEntity<Iterable<Usuario>> listarTodos() {

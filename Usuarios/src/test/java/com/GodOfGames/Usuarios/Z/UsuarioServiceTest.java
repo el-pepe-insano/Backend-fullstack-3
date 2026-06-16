@@ -115,19 +115,4 @@ class UsuarioServiceTest {
         assertFalse(resultado.isActivo());
     }
 
-    @Test
-    void actualizarPerfil_cambiaNombre() {
-        Usuario usuario = new Usuario();
-        usuario.setId(1L);
-        usuario.setNombre("Viejo");
-
-        ActualizarPerfilDTO dto = new ActualizarPerfilDTO();
-        dto.setNombre("Nuevo");
-
-        when(usuarioRepository.findById(1L)).thenReturn(Optional.of(usuario));
-        when(usuarioRepository.save(any())).thenAnswer(i -> i.getArgument(0));
-
-        Usuario resultado = usuarioService.actualizarPerfil(1L, dto);
-        assertEquals("Nuevo", resultado.getNombre());
-    }
 }
