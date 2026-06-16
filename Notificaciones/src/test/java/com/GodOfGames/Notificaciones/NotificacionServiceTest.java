@@ -1,18 +1,21 @@
-package com.GodOfGames.Notificaciones;
+﻿package com.GodOfGames.Notificaciones;
 
 import com.GodOfGames.Notificaciones.models.CodigoRecuperacion;
 import com.GodOfGames.Notificaciones.repositories.CodigoRecuperacionRepository;
 import com.GodOfGames.Notificaciones.services.NotificacionService;
+import jakarta.mail.Session;
+import jakarta.mail.internet.MimeMessage;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.springframework.mail.SimpleMailMessage;
+import org.mockito.Spy;
 import org.springframework.mail.javamail.JavaMailSender;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
+import java.util.Properties;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -29,22 +32,27 @@ class NotificacionServiceTest {
     @InjectMocks
     private NotificacionService notificacionService;
 
+    private MimeMessage mimeMessage;
+
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
+        Session session = Session.getDefaultInstance(new Properties());
+        mimeMessage = new MimeMessage(session);
+        when(mailSender.createMimeMessage()).thenReturn(mimeMessage);
+        doNothing().when(mailSender).send(any(MimeMessage.class));
     }
 
     @Test
     void enviarCodigoRecuperacion_exitoso() {
         doNothing().when(codigoRepository).deleteByCorreo(any());
         when(codigoRepository.save(any())).thenAnswer(i -> i.getArgument(0));
-        doNothing().when(mailSender).send(any(SimpleMailMessage.class));
 
         assertDoesNotThrow(() -> notificacionService.enviarCodigoRecuperacion("juan@test.com", "Juan"));
 
         verify(codigoRepository).deleteByCorreo("juan@test.com");
         verify(codigoRepository).save(any());
-        verify(mailSender).send(any(SimpleMailMessage.class));
+        verify(mailSender).send(any(MimeMessage.class));
     }
 
     @Test
