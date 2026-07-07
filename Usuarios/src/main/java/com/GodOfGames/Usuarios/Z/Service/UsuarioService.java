@@ -138,7 +138,23 @@ public class UsuarioService {
     log.info("Contrasena cambiada exitosamente para: {}", dto.getCorreo());
 }
 
+
     public List<Usuario> listarUsuarios() {
         return usuarioRepository.findAll();
     }
+
+    public Usuario CrearUsuarioAdmin(Usuario nuevoAdmin) {
+        log.info("Iniciando registro para: {}", nuevoAdmin.getCorreo());
+        if (usuarioRepository.findByCorreo(nuevoAdmin.getCorreo()).isPresent()) {
+            throw new RuntimeException("Error: El correo ya esta registrado en GodOfGames.");
+        }
+
+        nuevoAdmin.setRol(Rol.ADMIN);
+        nuevoAdmin.setContrasena(passwordEncoder.encode(nuevoAdmin.getContrasena()));
+        nuevoAdmin.setActivo(true);
+        Usuario usuarioGuardado = usuarioRepository.save(nuevoAdmin);
+        log.info("Admin registrado con ID: {}", usuarioGuardado.getId());
+        return usuarioGuardado;
+    }
+
 }

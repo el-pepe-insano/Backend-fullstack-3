@@ -36,6 +36,14 @@ public class UsuarioController {
         return new ResponseEntity<>(nuevoUsuario, HttpStatus.CREATED);
     }
 
+    @PostMapping("/registro/admin")
+    public ResponseEntity<Usuario> CrearAdmin(@Valid @RequestBody Usuario usuario) {
+        log.info("POST /api/usuarios/registro/admin");
+        Usuario nuevoUsuario = usuarioService.CrearUsuarioAdmin(usuario);
+        nuevoUsuario.setContrasena(null);
+        return new ResponseEntity<>(nuevoUsuario, HttpStatus.CREATED);
+    }
+
     @PostMapping("/login")
     public ResponseEntity<Map<String, Object>> login(@RequestParam String correo, @RequestParam String contrasena) {
         log.info("POST /api/usuarios/login");
