@@ -19,10 +19,10 @@ public class DataInitializer {
 
                     // RESIDENT EVIL
                     Producto.builder().nombre("Resident Evil 0").descripcion("El origen de la pesadilla en la mansión Spencer.").precio(29.99).imagen("Resident_evil_0.png").stock(50).build(),
-                    Producto.builder().nombre("Resident Evil 3 Remake").descripcion("Jill Valentine huye del imparable Nemesis.").precio(39.99).imagen("residen_evil_3.jpeg").stock(55).build(),
+                    Producto.builder().nombre("Resident Evil 3 Remake").descripcion("Jill Valentine huye del imparable Nemesis.").precio(39.99).imagen("resident_evil_3.jpeg").stock(55).build(),
                     Producto.builder().nombre("Resident Evil 4 Remake").descripcion("Leon S. Kennedy en una misión de rescate en Europa.").precio(49.99).imagen("resident_evil_4.jpeg").stock(70).build(),
                     Producto.builder().nombre("Resident Evil Village").descripcion("Ethan Winters en un misterioso pueblo europeo.").precio(49.99).imagen("resident_evil_village.jpeg").stock(65).build(),
-                    Producto.builder().nombre("Resident Evil Requiem").descripcion("El capítulo final de la saga Resident Evil.").precio(59.99).stock(80).build(),
+                    Producto.builder().nombre("Resident Evil Requiem").descripcion("El capítulo final de la saga Resident Evil.").precio(59.99).imagen("requiem.png").stock(80).build(),
 
                     // THE LAST OF US
                     Producto.builder().nombre("The Last of Us Part I").descripcion("Joel y Ellie atraviesan un mundo post-apocalíptico.").precio(49.99).imagen("the_last_of_us_part_1.jpg").stock(70).build(),
