@@ -32,7 +32,8 @@ public class JwtAuthFilter implements GlobalFilter, Ordered {
         "/actuator/health",
         "/actuator/info",
         "/api/productos",
-        "/api/productos/**"
+        "/api/productos/**",
+        "/uploads/productos/**"
     );
 
     @Override

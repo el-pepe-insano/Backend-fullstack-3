@@ -36,6 +36,9 @@ public class Producto {
     @Min(value = 0, message = "El stock no puede ser negativo")
     private Integer stock;
 
+    
+    private String imagen;
+
     // ESTA ES LA CLAVE PARA LA CONCURRENCIA
     @Version
     private Long version;

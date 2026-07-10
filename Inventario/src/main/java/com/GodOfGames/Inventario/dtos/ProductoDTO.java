@@ -13,6 +13,7 @@ public class ProductoDTO {
     private Long id;
     private String nombre;
     private String descripcion;
+    private String imagen;
     private Double precio;
     private Integer stock;
     private String claveJuego;

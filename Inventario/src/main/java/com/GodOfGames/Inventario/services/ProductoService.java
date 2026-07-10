@@ -8,6 +8,7 @@ import jakarta.persistence.OptimisticLockException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.UUID;
@@ -19,6 +20,9 @@ public class ProductoService {
     @Autowired
     private ProductoRepository productoRepository;
 
+    @Autowired
+    private ImagenStorageService imagenStorageService;
+
     public ProductoDTO convertirADto(Producto producto) {
         return ProductoDTO.builder()
                 .id(producto.getId())
@@ -26,6 +30,7 @@ public class ProductoService {
                 .descripcion(producto.getDescripcion())
                 .precio(producto.getPrecio())
                 .stock(producto.getStock())
+                .imagen(producto.getImagen())
                 .build();
     }
 
@@ -42,9 +47,13 @@ public class ProductoService {
         return convertirADto(producto);
     }
 
-    public ProductoDTO guardarProducto(Producto producto) {
-        return convertirADto(productoRepository.save(producto));
+    public ProductoDTO guardarProducto(Producto producto, MultipartFile imagen) {
+    if (imagen != null && !imagen.isEmpty()) {
+        producto.setImagen(imagenStorageService.guardarImagen(imagen));
     }
+    return convertirADto(productoRepository.save(producto));
+    }
+
 
     @Transactional
     public ProductoDTO reservarStock(Long id, Integer cantidad) {
@@ -83,24 +92,29 @@ public class ProductoService {
     }
 
     @Transactional
-    public ProductoDTO actualizarProducto(Long id, ActualizarProductoDTO dto) {
-        Producto producto = productoRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Producto no encontrado con ID: " + id));
+    public ProductoDTO actualizarProducto(Long id, ActualizarProductoDTO dto, MultipartFile imagen) {
+    Producto producto = productoRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Producto no encontrado con ID: " + id));
 
-        if (dto.getNombre() != null && !dto.getNombre().isBlank()) {
-            producto.setNombre(dto.getNombre());
-        }
-        if (dto.getDescripcion() != null) {
-            producto.setDescripcion(dto.getDescripcion());
-        }
-        if (dto.getPrecio() != null) {
-            producto.setPrecio(dto.getPrecio());
-        }
-        if (dto.getStock() != null) {
-            producto.setStock(dto.getStock());
-        }
+    if (dto.getNombre() != null && !dto.getNombre().isBlank()) {
+        producto.setNombre(dto.getNombre());
+    }
+    if (dto.getDescripcion() != null) {
+        producto.setDescripcion(dto.getDescripcion());
+    }
+    if (dto.getPrecio() != null) {
+        producto.setPrecio(dto.getPrecio());
+    }
+    if (dto.getStock() != null) {
+        producto.setStock(dto.getStock());
+    }
 
-        return convertirADto(productoRepository.save(producto));
+    if (imagen != null && !imagen.isEmpty()) {
+        imagenStorageService.eliminarImagen(producto.getImagen()); // borra la anterior
+        producto.setImagen(imagenStorageService.guardarImagen(imagen));
+    }
+
+       return convertirADto(productoRepository.save(producto));
     }
 
        
@@ -111,9 +125,9 @@ public class ProductoService {
 
     @Transactional
     public void eliminarProducto(Long id) {
-        if (!productoRepository.existsById(id)) {
-            throw new RuntimeException("El producto no existe con ID: " + id);
-        }
-        productoRepository.deleteById(id);
+    Producto producto = productoRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("El producto no existe con ID: " + id));
+    imagenStorageService.eliminarImagen(producto.getImagen());
+    productoRepository.deleteById(id);
     }
 }

@@ -35,7 +35,8 @@ public class SecurityConfig {
                 "/auth/**",
                 "/api/auth/**",
                 "/api/productos",
-                "/api/productos/**"
+                "/api/productos/**",
+                "/uploads/**"
             )
             .csrf(AbstractHttpConfigurer::disable)
             .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
