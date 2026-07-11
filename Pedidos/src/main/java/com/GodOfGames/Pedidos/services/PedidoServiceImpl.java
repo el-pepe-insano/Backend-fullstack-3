@@ -1,4 +1,4 @@
-package com.GodOfGames.Pedidos.services;
+﻿package com.GodOfGames.Pedidos.services;
 
 import com.GodOfGames.Pedidos.dtos.PedidoRequestDTO;
 import com.GodOfGames.Pedidos.dtos.PedidoResponseDTO;
@@ -28,13 +28,12 @@ public class PedidoServiceImpl implements PedidoService {
     private final PedidoRepository pedidoRepository;
     private final WebClient webClient;
 
-    @Value("${inventario.service.url:http://inventario-service:8082}")
+    @Value("")
     private String inventarioServiceUrl;
 
     @Override
     @Transactional
     public PedidoResponseDTO crearPedido(PedidoRequestDTO pedidoDTO, String usuarioId, String token) {
-        // El pedido nace como PENDIENTE sin claves ni descuento de stock aún
         Pedido pedido = Pedido.builder()
                 .usuarioId(usuarioId)
                 .fechaCreacion(LocalDateTime.now())
@@ -48,7 +47,7 @@ public class PedidoServiceImpl implements PedidoService {
                     .productoId(detalleDTO.getProductoId())
                     .cantidad(detalleDTO.getCantidad())
                     .precioUnitario(detalleDTO.getPrecioUnitario())
-                    .claveJuego(null) // Todavía no hay clave
+                    .claveJuego(null)
                     .build();
 
             pedido.addDetalle(detalle);
@@ -68,7 +67,6 @@ public class PedidoServiceImpl implements PedidoService {
         Pedido pedido = pedidoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Pedido no encontrado con ID: " + id));
 
-        // 🔥 LÓGICA CLAVE: Solo si pasa a COMPLETADO, descontamos el stock y traemos las claves
         if (nuevoEstado == EstadoPedido.COMPLETADO && pedido.getEstado() != EstadoPedido.COMPLETADO) {
             for (DetallePedido detalle : pedido.getDetalles()) {
                 try {
@@ -81,9 +79,9 @@ public class PedidoServiceImpl implements PedidoService {
                             .block();
 
                     if (producto != null) {
-                        detalle.setClaveJuego(producto.getClaveJuego()); // Guardamos la clave
+                        detalle.setClaveJuego(producto.getClaveJuego());
                     }
-                    log.info("Stock descontado exitosamente para producto ID: {}", detalle.getProductoId());
+                    log.info("Stock descontado para producto ID: {}", detalle.getProductoId());
                 } catch (Exception e) {
                     log.error("Error al descontar stock del juego ID {}: {}", detalle.getProductoId(), e.getMessage());
                     throw new RuntimeException("Error de stock en el juego ID " + detalle.getProductoId() + ": " + e.getMessage());
@@ -105,13 +103,25 @@ public class PedidoServiceImpl implements PedidoService {
     @Override
     @Transactional(readOnly = true)
     public List<PedidoResponseDTO> obtenerTodosLosPedidos() {
-        return pedidoRepository.findAll().stream().map(this::mapearAPedidoResponseDTO).collect(Collectors.toList());
+        return pedidoRepository.findAll().stream()
+                .map(this::mapearAPedidoResponseDTO)
+                .collect(Collectors.toList());
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<PedidoResponseDTO> obtenerPedidosPorUsuario(String usuarioId) {
-        return pedidoRepository.findByUsuarioId(usuarioId).stream().map(this::mapearAPedidoResponseDTO).collect(Collectors.toList());
+        return pedidoRepository.findByUsuarioId(usuarioId).stream()
+                .map(this::mapearAPedidoResponseDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<PedidoResponseDTO> obtenerHistorial(LocalDateTime desde, LocalDateTime hasta, EstadoPedido estado) {
+        return pedidoRepository.findHistorial(desde, hasta, estado).stream()
+                .map(this::mapearAPedidoResponseDTO)
+                .collect(Collectors.toList());
     }
 
     private PedidoResponseDTO mapearAPedidoResponseDTO(Pedido pedido) {
@@ -121,7 +131,7 @@ public class PedidoServiceImpl implements PedidoService {
                         .productoId(d.getProductoId())
                         .cantidad(d.getCantidad())
                         .precioUnitario(d.getPrecioUnitario())
-                        .claveJuego(d.getClaveJuego()) // Si está pendiente será null, si está completado tendrá la clave
+                        .claveJuego(d.getClaveJuego())
                         .build())
                 .collect(Collectors.toList());
 
