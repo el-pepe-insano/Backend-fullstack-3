@@ -1,4 +1,4 @@
-﻿package com.GodOfGames.Pedidos.services;
+package com.GodOfGames.Pedidos.services;
 
 import com.GodOfGames.Pedidos.dtos.PedidoRequestDTO;
 import com.GodOfGames.Pedidos.dtos.PedidoResponseDTO;
@@ -14,7 +14,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
-
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -28,120 +27,66 @@ public class PedidoServiceImpl implements PedidoService {
     private final PedidoRepository pedidoRepository;
     private final WebClient webClient;
 
-    @Value("")
+    @Value("${inventario.service.url:http://inventario-service:8082}")
     private String inventarioServiceUrl;
 
     @Override
     @Transactional
     public PedidoResponseDTO crearPedido(PedidoRequestDTO pedidoDTO, String usuarioId, String token) {
-        Pedido pedido = Pedido.builder()
-                .usuarioId(usuarioId)
-                .fechaCreacion(LocalDateTime.now())
-                .estado(EstadoPedido.PENDIENTE)
-                .build();
-
-        BigDecimal totalPedido = BigDecimal.ZERO;
-
-        for (PedidoRequestDTO.DetalleRequestDTO detalleDTO : pedidoDTO.getDetalles()) {
-            DetallePedido detalle = DetallePedido.builder()
-                    .productoId(detalleDTO.getProductoId())
-                    .cantidad(detalleDTO.getCantidad())
-                    .precioUnitario(detalleDTO.getPrecioUnitario())
-                    .claveJuego(null)
-                    .build();
-
-            pedido.addDetalle(detalle);
-
-            BigDecimal subtotal = detalleDTO.getPrecioUnitario()
-                    .multiply(BigDecimal.valueOf(detalleDTO.getCantidad()));
-            totalPedido = totalPedido.add(subtotal);
+        Pedido pedido = Pedido.builder().usuarioId(usuarioId).fechaCreacion(LocalDateTime.now()).estado(EstadoPedido.PENDIENTE).build();
+        BigDecimal total = BigDecimal.ZERO;
+        for (PedidoRequestDTO.DetalleRequestDTO d : pedidoDTO.getDetalles()) {
+            pedido.addDetalle(DetallePedido.builder().productoId(d.getProductoId()).cantidad(d.getCantidad()).precioUnitario(d.getPrecioUnitario()).claveJuego(null).build());
+            total = total.add(d.getPrecioUnitario().multiply(BigDecimal.valueOf(d.getCantidad())));
         }
-
-        pedido.setTotal(totalPedido);
-        return mapearAPedidoResponseDTO(pedidoRepository.save(pedido));
+        pedido.setTotal(total);
+        return mapear(pedidoRepository.save(pedido));
     }
 
     @Override
     @Transactional
     public PedidoResponseDTO actualizarEstado(Long id, EstadoPedido nuevoEstado, String token) {
-        Pedido pedido = pedidoRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Pedido no encontrado con ID: " + id));
-
+        Pedido pedido = pedidoRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Pedido no encontrado: " + id));
         if (nuevoEstado == EstadoPedido.COMPLETADO && pedido.getEstado() != EstadoPedido.COMPLETADO) {
             for (DetallePedido detalle : pedido.getDetalles()) {
                 try {
-                    ProductoClientDTO producto = webClient.post()
-                            .uri(inventarioServiceUrl + "/api/productos/" + detalle.getProductoId()
-                                    + "/reservar?cantidad=" + detalle.getCantidad())
-                            .header("Authorization", "Bearer " + token)
-                            .retrieve()
-                            .bodyToMono(ProductoClientDTO.class)
-                            .block();
-
-                    if (producto != null) {
-                        detalle.setClaveJuego(producto.getClaveJuego());
-                    }
-                    log.info("Stock descontado para producto ID: {}", detalle.getProductoId());
+                    ProductoClientDTO p = webClient.post().uri(inventarioServiceUrl + "/api/productos/" + detalle.getProductoId() + "/reservar?cantidad=" + detalle.getCantidad()).header("Authorization", "Bearer " + token).retrieve().bodyToMono(ProductoClientDTO.class).block();
+                    if (p != null) detalle.setClaveJuego(p.getClaveJuego());
                 } catch (Exception e) {
-                    log.error("Error al descontar stock del juego ID {}: {}", detalle.getProductoId(), e.getMessage());
-                    throw new RuntimeException("Error de stock en el juego ID " + detalle.getProductoId() + ": " + e.getMessage());
+                    throw new RuntimeException("Error de stock en juego ID " + detalle.getProductoId());
                 }
             }
         }
-
         pedido.setEstado(nuevoEstado);
-        return mapearAPedidoResponseDTO(pedidoRepository.save(pedido));
+        return mapear(pedidoRepository.save(pedido));
     }
 
     @Override
     @Transactional(readOnly = true)
     public PedidoResponseDTO obtenerPedidoPorId(Long id) {
-        return mapearAPedidoResponseDTO(pedidoRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Pedido no encontrado con ID: " + id)));
+        return mapear(pedidoRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Pedido no encontrado: " + id)));
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<PedidoResponseDTO> obtenerTodosLosPedidos() {
-        return pedidoRepository.findAll().stream()
-                .map(this::mapearAPedidoResponseDTO)
-                .collect(Collectors.toList());
+        return pedidoRepository.findAll().stream().map(this::mapear).collect(Collectors.toList());
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<PedidoResponseDTO> obtenerPedidosPorUsuario(String usuarioId) {
-        return pedidoRepository.findByUsuarioId(usuarioId).stream()
-                .map(this::mapearAPedidoResponseDTO)
-                .collect(Collectors.toList());
+        return pedidoRepository.findByUsuarioId(usuarioId).stream().map(this::mapear).collect(Collectors.toList());
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<PedidoResponseDTO> obtenerHistorial(LocalDateTime desde, LocalDateTime hasta, EstadoPedido estado) {
-        return pedidoRepository.findHistorial(desde, hasta, estado).stream()
-                .map(this::mapearAPedidoResponseDTO)
-                .collect(Collectors.toList());
+        return pedidoRepository.findHistorial(desde, hasta, estado).stream().map(this::mapear).collect(Collectors.toList());
     }
 
-    private PedidoResponseDTO mapearAPedidoResponseDTO(Pedido pedido) {
-        List<PedidoResponseDTO.DetalleResponseDTO> detallesDTO = pedido.getDetalles().stream()
-                .map(d -> PedidoResponseDTO.DetalleResponseDTO.builder()
-                        .id(d.getId())
-                        .productoId(d.getProductoId())
-                        .cantidad(d.getCantidad())
-                        .precioUnitario(d.getPrecioUnitario())
-                        .claveJuego(d.getClaveJuego())
-                        .build())
-                .collect(Collectors.toList());
-
-        return PedidoResponseDTO.builder()
-                .id(pedido.getId())
-                .usuarioId(pedido.getUsuarioId())
-                .fechaCreacion(pedido.getFechaCreacion())
-                .estado(pedido.getEstado())
-                .total(pedido.getTotal())
-                .detalles(detallesDTO)
-                .build();
+    private PedidoResponseDTO mapear(Pedido pedido) {
+        List<PedidoResponseDTO.DetalleResponseDTO> detalles = pedido.getDetalles().stream().map(d -> PedidoResponseDTO.DetalleResponseDTO.builder().id(d.getId()).productoId(d.getProductoId()).cantidad(d.getCantidad()).precioUnitario(d.getPrecioUnitario()).claveJuego(d.getClaveJuego()).build()).collect(Collectors.toList());
+        return PedidoResponseDTO.builder().id(pedido.getId()).usuarioId(pedido.getUsuarioId()).fechaCreacion(pedido.getFechaCreacion()).estado(pedido.getEstado()).total(pedido.getTotal()).detalles(detalles).build();
     }
 }
