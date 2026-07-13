@@ -23,7 +23,6 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/v1/pedidos")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
 @Tag(name = "Pedidos", description = "API para la gestion de Pedidos")
 public class PedidoController {
 
