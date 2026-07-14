@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: inventario-app
-        image: ryuko67/godofgames-inventario:v2
+        image: ryuko67/godofgames-inventario:v18
         imagePullPolicy: Always
         ports:
         - containerPort: 8082
@@ -22,11 +22,17 @@ spec:
         - name: JWT_SECRET
           value: "requiemElMejorJuegoDeGodOfGames2026SecretKeyParaJWT12345678901234"
         - name: SPRING_DATASOURCE_URL
-          value: jdbc:postgresql://postgres-service:5432/godofgames_inventario
+          value: jdbc:postgresql://postgres-inventario-service:5432/godofgames_inventario
         - name: SPRING_DATASOURCE_USERNAME
           value: "postgres"
         - name: SPRING_DATASOURCE_PASSWORD
           value: "Bullseye"
+        - name: SPRING_RABBITMQ_HOST
+          value: "rabbitmq-service"
+        - name: SPRING_RABBITMQ_USERNAME
+          value: "godofgames"
+        - name: SPRING_RABBITMQ_PASSWORD
+          value: "godofgames123"
         readinessProbe:
           httpGet:
             path: /actuator/health

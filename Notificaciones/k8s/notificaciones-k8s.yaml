@@ -14,13 +14,13 @@ spec:
     spec:
       containers:
       - name: notificaciones-app
-        image: ryuko67/godofgames-notificaciones:v1
+        image: ryuko67/godofgames-envios:v4
         imagePullPolicy: Always
         ports:
         - containerPort: 8088
         env:
         - name: SPRING_DATASOURCE_URL
-          value: jdbc:postgresql://postgres-service:5432/godofgames_notificaciones
+          value: jdbc:postgresql://postgres-notificaciones-service:5432/godofgames_notificaciones
         - name: SPRING_DATASOURCE_USERNAME
           value: "postgres"
         - name: SPRING_DATASOURCE_PASSWORD

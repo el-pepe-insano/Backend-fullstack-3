@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: postgres-pvc
+  name: postgres-pedidos-pvc
 spec:
   accessModes:
     - ReadWriteOnce
@@ -12,20 +12,20 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: postgres-deployment
+  name: postgres-pedidos-deployment
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: postgres
+      app: postgres-pedidos
   template:
     metadata:
       labels:
-        app: postgres
+        app: postgres-pedidos
     spec:
       containers:
         - name: postgres
-          image: postgres:15
+          image: postgres:16
           ports:
             - containerPort: 5432
           env:
@@ -34,22 +34,22 @@ spec:
             - name: POSTGRES_PASSWORD
               value: Bullseye
             - name: POSTGRES_DB
-              value: godofgames_inventario
+              value: godofgames_pedidos
           volumeMounts:
             - name: postgres-storage
               mountPath: /var/lib/postgresql/data
       volumes:
         - name: postgres-storage
           persistentVolumeClaim:
-            claimName: postgres-pvc
+            claimName: postgres-pedidos-pvc
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: postgres-service
+  name: postgres-pedidos-service
 spec:
   selector:
-    app: postgres
+    app: postgres-pedidos
   ports:
     - protocol: TCP
       port: 5432

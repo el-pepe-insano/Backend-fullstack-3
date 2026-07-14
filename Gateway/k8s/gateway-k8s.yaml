@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: gateway-app
-        image: ryuko67/godofgames-gateway:v3
+        image: ryuko67/godofgames-gateway:v4
         imagePullPolicy: Always
         ports:
         - containerPort: 8080
