@@ -21,6 +21,16 @@ spec:
         env:
         - name: JWT_SECRET
           value: "requiemElMejorJuegoDeGodOfGames2026SecretKeyParaJWT12345678901234"
+        - name: AZURE_TENANT_ID
+          valueFrom:
+            secretKeyRef:
+              name: entra-id-config
+              key: tenant-id
+        - name: AZURE_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: entra-id-config
+              key: client-id
         readinessProbe:
           httpGet:
             path: /actuator/health
