@@ -33,6 +33,7 @@ class JwtAuthFilterTest {
         jwtDecoder = mock(ReactiveJwtDecoder.class);
         jwtAuthFilter = new JwtAuthFilter(jwtDecoder);
         chain = mock(GatewayFilterChain.class);
+
         when(chain.filter(any())).thenReturn(Mono.empty());
     }
 
@@ -44,16 +45,20 @@ class JwtAuthFilterTest {
                 Map.of("alg", "RS256"),
                 Map.of(
                         "sub", usuario,
-                        "roles", List.of(rol),
-                        "preferred_username", usuario + "@godofgames.com"
+                        "cognito:groups", List.of(rol),
+                        "username", usuario + "@godofgames.com",
+                        "token_use", "access"
                 )
         );
     }
 
     @Test
     void filter_rutaPublicaExacta_dejaPasarSinValidar() {
-        MockServerHttpRequest request = MockServerHttpRequest.post("/api/usuarios/login").build();
-        ServerWebExchange exchange = MockServerWebExchange.from(request);
+        MockServerHttpRequest request =
+                MockServerHttpRequest.post("/api/usuarios/login").build();
+
+        ServerWebExchange exchange =
+                MockServerWebExchange.from(request);
 
         jwtAuthFilter.filter(exchange, chain).block();
 
@@ -64,8 +69,11 @@ class JwtAuthFilterTest {
 
     @Test
     void filter_rutaPublicaWildcard_dejaPasarSinValidar() {
-        MockServerHttpRequest request = MockServerHttpRequest.get("/api/productos/5").build();
-        ServerWebExchange exchange = MockServerWebExchange.from(request);
+        MockServerHttpRequest request =
+                MockServerHttpRequest.get("/api/productos/5").build();
+
+        ServerWebExchange exchange =
+                MockServerWebExchange.from(request);
 
         jwtAuthFilter.filter(exchange, chain).block();
 
@@ -74,37 +82,59 @@ class JwtAuthFilterTest {
 
     @Test
     void filter_sinHeaderAuthorization_retorna401() {
-        MockServerHttpRequest request = MockServerHttpRequest.get("/api/v1/pedidos").build();
-        ServerWebExchange exchange = MockServerWebExchange.from(request);
+        MockServerHttpRequest request =
+                MockServerHttpRequest.get("/api/v1/pedidos").build();
+
+        ServerWebExchange exchange =
+                MockServerWebExchange.from(request);
 
         jwtAuthFilter.filter(exchange, chain).block();
 
-        assertEquals(HttpStatus.UNAUTHORIZED, exchange.getResponse().getStatusCode());
+        assertEquals(
+                HttpStatus.UNAUTHORIZED,
+                exchange.getResponse().getStatusCode()
+        );
+
         verify(chain, never()).filter(any());
     }
 
     @Test
     void filter_headerSinBearer_retorna401() {
-        MockServerHttpRequest request = MockServerHttpRequest.get("/api/v1/pedidos")
-                .header(HttpHeaders.AUTHORIZATION, "Basic algo")
-                .build();
-        ServerWebExchange exchange = MockServerWebExchange.from(request);
+        MockServerHttpRequest request =
+                MockServerHttpRequest.get("/api/v1/pedidos")
+                        .header(HttpHeaders.AUTHORIZATION, "Basic algo")
+                        .build();
+
+        ServerWebExchange exchange =
+                MockServerWebExchange.from(request);
 
         jwtAuthFilter.filter(exchange, chain).block();
 
-        assertEquals(HttpStatus.UNAUTHORIZED, exchange.getResponse().getStatusCode());
+        assertEquals(
+                HttpStatus.UNAUTHORIZED,
+                exchange.getResponse().getStatusCode()
+        );
+
         verify(chain, never()).filter(any());
     }
 
     @Test
     void filter_tokenValido_agregaHeadersYContinua() {
         when(jwtDecoder.decode(eq("token-entra-valido")))
-                .thenReturn(Mono.just(jwtValido("user1", "Cliente")));
+                .thenReturn(
+                        Mono.just(jwtValido("user1", "Cliente"))
+                );
 
-        MockServerHttpRequest request = MockServerHttpRequest.get("/api/v1/pedidos")
-                .header(HttpHeaders.AUTHORIZATION, "Bearer token-entra-valido")
-                .build();
-        ServerWebExchange exchange = MockServerWebExchange.from(request);
+        MockServerHttpRequest request =
+                MockServerHttpRequest.get("/api/v1/pedidos")
+                        .header(
+                                HttpHeaders.AUTHORIZATION,
+                                "Bearer token-entra-valido"
+                        )
+                        .build();
+
+        ServerWebExchange exchange =
+                MockServerWebExchange.from(request);
 
         jwtAuthFilter.filter(exchange, chain).block();
 
@@ -115,32 +145,60 @@ class JwtAuthFilterTest {
     @Test
     void filter_tokenInvalido_retorna401() {
         when(jwtDecoder.decode(eq("token-corrupto-invalido")))
-                .thenReturn(Mono.error(new BadJwtException("token invalido")));
+                .thenReturn(
+                        Mono.error(
+                                new BadJwtException("token invalido")
+                        )
+                );
 
-        MockServerHttpRequest request = MockServerHttpRequest.get("/api/v1/pedidos")
-                .header(HttpHeaders.AUTHORIZATION, "Bearer token-corrupto-invalido")
-                .build();
-        ServerWebExchange exchange = MockServerWebExchange.from(request);
+        MockServerHttpRequest request =
+                MockServerHttpRequest.get("/api/v1/pedidos")
+                        .header(
+                                HttpHeaders.AUTHORIZATION,
+                                "Bearer token-corrupto-invalido"
+                        )
+                        .build();
+
+        ServerWebExchange exchange =
+                MockServerWebExchange.from(request);
 
         jwtAuthFilter.filter(exchange, chain).block();
 
-        assertEquals(HttpStatus.UNAUTHORIZED, exchange.getResponse().getStatusCode());
+        assertEquals(
+                HttpStatus.UNAUTHORIZED,
+                exchange.getResponse().getStatusCode()
+        );
+
         verify(chain, never()).filter(any());
     }
 
     @Test
     void filter_rolNoAutorizado_retorna403() {
         when(jwtDecoder.decode(eq("token-sin-rol-admin")))
-                .thenReturn(Mono.just(jwtValido("user1", "Cliente")));
+                .thenReturn(
+                        Mono.just(jwtValido("user1", "Cliente"))
+                );
 
-        MockServerHttpRequest request = MockServerHttpRequest.get("/api/productos/admin/reportes")
-                .header(HttpHeaders.AUTHORIZATION, "Bearer token-sin-rol-admin")
+        MockServerHttpRequest request =
+                MockServerHttpRequest.get(
+                        "/api/productos/admin/reportes"
+                )
+                .header(
+                        HttpHeaders.AUTHORIZATION,
+                        "Bearer token-sin-rol-admin"
+                )
                 .build();
-        ServerWebExchange exchange = MockServerWebExchange.from(request);
+
+        ServerWebExchange exchange =
+                MockServerWebExchange.from(request);
 
         jwtAuthFilter.filter(exchange, chain).block();
 
-        assertEquals(HttpStatus.FORBIDDEN, exchange.getResponse().getStatusCode());
+        assertEquals(
+                HttpStatus.FORBIDDEN,
+                exchange.getResponse().getStatusCode()
+        );
+
         verify(chain, never()).filter(any());
     }
 
