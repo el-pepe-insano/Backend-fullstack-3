@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -16,9 +17,9 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
     @Autowired
-    private JwtValidationFilter jwtValidationFilter;
+    private UserContextFilter userContextFilter;
 
-    // CADENA 1: Rutas públicas — sin filtros, máxima prioridad
+    // CADENA 1: documentacion/infra â€” sin filtros, maxima prioridad
     @Bean
     @Order(1)
     public SecurityFilterChain publicFilterChain(HttpSecurity http) throws Exception {
@@ -32,10 +33,6 @@ public class SecurityConfig {
                 "/webjars/**",
                 "/actuator/**",
                 "/error",
-                "/auth/**",
-                "/api/auth/**",
-                "/api/productos",
-                "/api/productos/**",
                 "/uploads/**"
             )
             .csrf(AbstractHttpConfigurer::disable)
@@ -44,15 +41,26 @@ public class SecurityConfig {
             .build();
     }
 
-    // CADENA 2: Todo lo demás requiere JWT
+    // CADENA 2: /api/productos â€” lectura publica, escritura solo Admin
     @Bean
     @Order(2)
     public SecurityFilterChain privateFilterChain(HttpSecurity http) throws Exception {
         return http
             .csrf(AbstractHttpConfigurer::disable)
             .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .authorizeHttpRequests(auth -> auth.anyRequest().authenticated())
-            .addFilterBefore(jwtValidationFilter, UsernamePasswordAuthenticationFilter.class)
+            .authorizeHttpRequests(auth -> auth
+                // Catalogo de productos: lectura libre (vitrina publica de la tienda)
+                .requestMatchers(HttpMethod.GET, "/api/productos", "/api/productos/**").permitAll()
+                // Administracion de productos: solo Admin
+                .requestMatchers(HttpMethod.POST, "/api/productos").hasRole("Admin")
+                .requestMatchers(HttpMethod.PATCH, "/api/productos/**").hasRole("Admin")
+                .requestMatchers(HttpMethod.DELETE, "/api/productos/**").hasRole("Admin")
+                .requestMatchers(HttpMethod.PUT, "/api/productos/*/stock").hasRole("Admin")
+                // Reserva de stock durante el checkout: cualquier usuario autenticado
+                .requestMatchers(HttpMethod.POST, "/api/productos/*/reservar").authenticated()
+                .anyRequest().authenticated()
+            )
+            .addFilterBefore(userContextFilter, UsernamePasswordAuthenticationFilter.class)
             .build();
     }
 }
