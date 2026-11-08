@@ -25,12 +25,20 @@ spec:
           value: "postgres"
         - name: SPRING_DATASOURCE_PASSWORD
           value: "Bullseye"
-        - name: SPRING_RABBITMQ_HOST
-          value: "rabbitmq-service"
-        - name: SPRING_RABBITMQ_USERNAME
-          value: "godofgames"
-        - name: SPRING_RABBITMQ_PASSWORD
-          value: "godofgames123"
+        - name: AWS_REGION
+          value: "us-east-1"
+        - name: AWS_ACCESS_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              name: aws-credentials
+              key: access-key-id
+              optional: true
+        - name: AWS_SECRET_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: aws-credentials
+              key: secret-access-key
+              optional: true
         readinessProbe:
           tcpSocket:
             port: 8081

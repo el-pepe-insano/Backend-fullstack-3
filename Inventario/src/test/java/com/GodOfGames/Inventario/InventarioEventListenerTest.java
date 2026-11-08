@@ -9,7 +9,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import io.awspring.cloud.sqs.operations.SqsOperations;
 
 import java.util.List;
 
@@ -24,7 +24,7 @@ class InventarioEventListenerTest {
     private ProductoService productoService;
 
     @Mock
-    private RabbitTemplate rabbitTemplate;
+    private SqsOperations sqsOperations;
 
     @InjectMocks
     private InventarioEventListener inventarioEventListener;
@@ -36,12 +36,11 @@ class InventarioEventListenerTest {
 
         ProductoDTO dto = ProductoDTO.builder().id(1L).nombre("FIFA").stock(8).build();
         when(productoService.reservarStock(1L, 2)).thenReturn(dto);
-        doNothing().when(rabbitTemplate).convertAndSend(anyString(), anyString(), any(Object.class));
 
         inventarioEventListener.handlePedidoCreado(event);
 
         verify(productoService).reservarStock(1L, 2);
-        verify(rabbitTemplate).convertAndSend(anyString(), anyString(), any(Object.class));
+        verify(sqsOperations).send(anyString(), any(Object.class));
     }
 
     @Test
@@ -50,10 +49,9 @@ class InventarioEventListenerTest {
         PedidoCreadoEvent event = new PedidoCreadoEvent(1L, "user1", List.of(detalle));
 
         when(productoService.reservarStock(1L, 100)).thenThrow(new RuntimeException("Stock insuficiente"));
-        doNothing().when(rabbitTemplate).convertAndSend(anyString(), anyString(), any(Object.class));
 
         inventarioEventListener.handlePedidoCreado(event);
 
-        verify(rabbitTemplate).convertAndSend(anyString(), anyString(), any(Object.class));
+        verify(sqsOperations).send(anyString(), any(Object.class));
     }
 }

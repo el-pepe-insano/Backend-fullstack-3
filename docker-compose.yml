@@ -1,4 +1,4 @@
-﻿services:
+services:
 
   postgres:
     image: postgres:16
@@ -19,26 +19,22 @@
       timeout: 5s
       retries: 5
 
-  rabbitmq:
-    image: rabbitmq:3-management
-    container_name: rabbitmq
+  localstack:
+    image: localstack/localstack:3.8.1
+    container_name: localstack
     ports:
-      - "5672:5672"
-      - "15672:15672"
+      - "4566:4566"
     environment:
-      RABBITMQ_DEFAULT_USER: guest
-      RABBITMQ_DEFAULT_PASS: guest
-    command: >
-      sh -c "echo 'vm_memory_high_watermark.relative = 0.2' > /etc/rabbitmq/conf.d/memory.conf &&
-             rabbitmq-server"
+      SERVICES: sqs
+      AWS_DEFAULT_REGION: us-east-1
     networks:
       - godofgames-net
     healthcheck:
-      test: ["CMD", "rabbitmq-diagnostics", "ping"]
-      interval: 15s
-      timeout: 20s
+      test: ["CMD", "curl", "-sf", "http://localhost:4566/_localstack/health"]
+      interval: 10s
+      timeout: 5s
       retries: 10
-      start_period: 60s
+      start_period: 15s
 
   usuarios-service:
     build: ./Usuarios
@@ -49,14 +45,14 @@
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-service:5432/godofgames_usuarios
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: Bullseye
-      SPRING_RABBITMQ_HOST: rabbitmq
-      SPRING_RABBITMQ_PORT: 5672
-      SPRING_RABBITMQ_USERNAME: guest
-      SPRING_RABBITMQ_PASSWORD: guest
+      AWS_REGION: us-east-1
+      SPRING_CLOUD_AWS_SQS_ENDPOINT: http://localstack:4566
+      SPRING_CLOUD_AWS_CREDENTIALS_ACCESS_KEY: test
+      SPRING_CLOUD_AWS_CREDENTIALS_SECRET_KEY: test
     depends_on:
       postgres:
         condition: service_healthy
-      rabbitmq:
+      localstack:
         condition: service_healthy
     networks:
       - godofgames-net
@@ -70,14 +66,14 @@
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-service:5432/godofgames_notificaciones
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: Bullseye
-      SPRING_RABBITMQ_HOST: rabbitmq
-      SPRING_RABBITMQ_PORT: 5672
-      SPRING_RABBITMQ_USERNAME: guest
-      SPRING_RABBITMQ_PASSWORD: guest
+      AWS_REGION: us-east-1
+      SPRING_CLOUD_AWS_SQS_ENDPOINT: http://localstack:4566
+      SPRING_CLOUD_AWS_CREDENTIALS_ACCESS_KEY: test
+      SPRING_CLOUD_AWS_CREDENTIALS_SECRET_KEY: test
     depends_on:
       postgres:
         condition: service_healthy
-      rabbitmq:
+      localstack:
         condition: service_healthy
     networks:
       - godofgames-net
@@ -91,16 +87,16 @@
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-service:5432/godofgames_inventario
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: Bullseye
-      SPRING_RABBITMQ_HOST: rabbitmq
-      SPRING_RABBITMQ_PORT: 5672
-      SPRING_RABBITMQ_USERNAME: guest
-      SPRING_RABBITMQ_PASSWORD: guest
+      AWS_REGION: us-east-1
+      SPRING_CLOUD_AWS_SQS_ENDPOINT: http://localstack:4566
+      SPRING_CLOUD_AWS_CREDENTIALS_ACCESS_KEY: test
+      SPRING_CLOUD_AWS_CREDENTIALS_SECRET_KEY: test
     volumes:
       - ./Inventario/uploads/productos:/app/uploads/productos
     depends_on:
       postgres:
         condition: service_healthy
-      rabbitmq:
+      localstack:
         condition: service_healthy
     networks:
       - godofgames-net
@@ -114,14 +110,14 @@
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-service:5432/godofgames_pedidos
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: Bullseye
-      SPRING_RABBITMQ_HOST: rabbitmq
-      SPRING_RABBITMQ_PORT: 5672
-      SPRING_RABBITMQ_USERNAME: guest
-      SPRING_RABBITMQ_PASSWORD: guest
+      AWS_REGION: us-east-1
+      SPRING_CLOUD_AWS_SQS_ENDPOINT: http://localstack:4566
+      SPRING_CLOUD_AWS_CREDENTIALS_ACCESS_KEY: test
+      SPRING_CLOUD_AWS_CREDENTIALS_SECRET_KEY: test
     depends_on:
       postgres:
         condition: service_healthy
-      rabbitmq:
+      localstack:
         condition: service_healthy
       inventario-service:
         condition: service_started

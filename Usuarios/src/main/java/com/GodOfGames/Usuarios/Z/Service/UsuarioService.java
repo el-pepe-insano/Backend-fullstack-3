@@ -1,11 +1,11 @@
 package com.GodOfGames.Usuarios.Z.Service;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import io.awspring.cloud.sqs.operations.SqsOperations;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
-import com.GodOfGames.Usuarios.Z.config.RabbitMQConfig;
+import com.GodOfGames.Usuarios.Z.config.SqsConfig;
 import com.GodOfGames.Usuarios.Z.messaging.RecuperacionEvent;
 import com.GodOfGames.Usuarios.Z.models.Rol;
 import com.GodOfGames.Usuarios.Z.models.Usuario;
@@ -23,14 +23,14 @@ public class UsuarioService {
 
     private final UsuarioRepository usuarioRepository;
     private final PasswordEncoder passwordEncoder;
-    private final RabbitTemplate rabbitTemplate;
+    private final SqsOperations sqsOperations;
     private final WebClient webClient;
 
     public UsuarioService(UsuarioRepository usuarioRepository, PasswordEncoder passwordEncoder,
-                          RabbitTemplate rabbitTemplate, WebClient.Builder webClientBuilder) {
+                          SqsOperations sqsOperations, WebClient.Builder webClientBuilder) {
         this.usuarioRepository = usuarioRepository;
         this.passwordEncoder = passwordEncoder;
-        this.rabbitTemplate = rabbitTemplate;
+        this.sqsOperations = sqsOperations;
         this.webClient = webClientBuilder.baseUrl("http://notificaciones-service:8088").build();
     }
 
@@ -97,7 +97,7 @@ public class UsuarioService {
         Usuario usuario = usuarioRepository.findByCorreo(correo)
                 .orElseThrow(() -> new RuntimeException("No existe una cuenta con ese correo."));
         RecuperacionEvent event = new RecuperacionEvent(usuario.getCorreo(), usuario.getNombre());
-        rabbitTemplate.convertAndSend(RabbitMQConfig.EXCHANGE, "recuperacion.contrasena", event);
+        sqsOperations.send(SqsConfig.QUEUE_RECUPERACION, event);
         log.info("Evento de recuperacion enviado para: {}", correo);
     }
 

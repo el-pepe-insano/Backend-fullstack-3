@@ -1,22 +1,24 @@
 package com.GodOfGames.Inventario.messaging;
 
-import com.GodOfGames.Inventario.config.RabbitMQConfig;
+import com.GodOfGames.Inventario.config.SqsConfig;
 import com.GodOfGames.Inventario.services.ProductoService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.amqp.rabbit.annotation.RabbitListener;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import io.awspring.cloud.sqs.annotation.SqsListener;
+import io.awspring.cloud.sqs.operations.SqsOperations;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 @Component
+@ConditionalOnProperty(name = "sqs.listeners.enabled", havingValue = "true", matchIfMissing = true)
 @RequiredArgsConstructor
 @Slf4j
 public class InventarioEventListener {
 
     private final ProductoService productoService;
-    private final RabbitTemplate rabbitTemplate;
+    private final SqsOperations sqsOperations;
 
-    @RabbitListener(queues = RabbitMQConfig.QUEUE_PEDIDO_CREADO)
+    @SqsListener(SqsConfig.QUEUE_PEDIDO_CREADO)
     public void handlePedidoCreado(PedidoCreadoEvent event) {
         log.info("Evento recibido: pedido.creado para pedidoId: {}", event.getPedidoId());
 
@@ -31,10 +33,7 @@ public class InventarioEventListener {
             // Publicar evento de éxito
             StockReservadoEvent response = new StockReservadoEvent(
                     event.getPedidoId(), true, "Stock reservado exitosamente");
-            rabbitTemplate.convertAndSend(
-                    RabbitMQConfig.EXCHANGE,
-                    RabbitMQConfig.QUEUE_STOCK_RESERVADO,
-                    response);
+            sqsOperations.send(SqsConfig.QUEUE_STOCK_RESERVADO, response);
             log.info("Evento stock.reservado publicado para pedidoId: {}", event.getPedidoId());
 
         } catch (Exception e) {
@@ -43,10 +42,7 @@ public class InventarioEventListener {
             // Publicar evento de fallo
             StockReservadoEvent response = new StockReservadoEvent(
                     event.getPedidoId(), false, e.getMessage());
-            rabbitTemplate.convertAndSend(
-                    RabbitMQConfig.EXCHANGE,
-                    RabbitMQConfig.QUEUE_STOCK_FALLIDO,
-                    response);
+            sqsOperations.send(SqsConfig.QUEUE_STOCK_FALLIDO, response);
         }
     }
 }

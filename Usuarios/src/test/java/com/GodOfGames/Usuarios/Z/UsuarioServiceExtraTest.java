@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import io.awspring.cloud.sqs.operations.SqsOperations;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.reactive.function.client.WebClient;
 
@@ -34,7 +34,7 @@ class UsuarioServiceExtraTest {
     private PasswordEncoder passwordEncoder;
 
     @Mock
-    private RabbitTemplate rabbitTemplate;
+    private SqsOperations sqsOperations;
 
     @Mock
     private WebClient.Builder webClientBuilder;
@@ -55,7 +55,7 @@ class UsuarioServiceExtraTest {
         MockitoAnnotations.openMocks(this);
         when(webClientBuilder.baseUrl(anyString())).thenReturn(webClientBuilder);
         when(webClientBuilder.build()).thenReturn(webClient);
-        usuarioService = new UsuarioService(usuarioRepository, passwordEncoder, rabbitTemplate, webClientBuilder);
+        usuarioService = new UsuarioService(usuarioRepository, passwordEncoder, sqsOperations, webClientBuilder);
     }
 
     private Usuario usuarioBase() {
@@ -150,7 +150,7 @@ class UsuarioServiceExtraTest {
 
         usuarioService.solicitarRecuperacion("juan@test.com");
 
-        verify(rabbitTemplate, times(1)).convertAndSend(anyString(), anyString(), any(com.GodOfGames.Usuarios.Z.messaging.RecuperacionEvent.class));
+        verify(sqsOperations, times(1)).send(anyString(), any(com.GodOfGames.Usuarios.Z.messaging.RecuperacionEvent.class));
     }
 
     @Test

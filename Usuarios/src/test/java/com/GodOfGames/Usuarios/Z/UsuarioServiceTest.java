@@ -10,7 +10,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import io.awspring.cloud.sqs.operations.SqsOperations;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.reactive.function.client.WebClient;
 
@@ -26,7 +26,7 @@ class UsuarioServiceTest {
 
     @Mock private UsuarioRepository usuarioRepository;
     @Mock private PasswordEncoder passwordEncoder;
-    @Mock private RabbitTemplate rabbitTemplate;
+    @Mock private SqsOperations sqsOperations;
     @Mock private WebClient.Builder webClientBuilder;
     @Mock private WebClient webClient;
 
@@ -37,7 +37,7 @@ class UsuarioServiceTest {
         MockitoAnnotations.openMocks(this);
         when(webClientBuilder.baseUrl(anyString())).thenReturn(webClientBuilder);
         when(webClientBuilder.build()).thenReturn(webClient);
-        usuarioService = new UsuarioService(usuarioRepository, passwordEncoder, rabbitTemplate, webClientBuilder);
+        usuarioService = new UsuarioService(usuarioRepository, passwordEncoder, sqsOperations, webClientBuilder);
     }
 
     private Usuario usuarioBase() {
@@ -158,9 +158,8 @@ class UsuarioServiceTest {
     void solicitarRecuperacion_exitoso() {
         Usuario u = usuarioBase();
         when(usuarioRepository.findByCorreo("juan@test.com")).thenReturn(Optional.of(u));
-        doNothing().when(rabbitTemplate).convertAndSend(anyString(), anyString(), any(Object.class));
         assertDoesNotThrow(() -> usuarioService.solicitarRecuperacion("juan@test.com"));
-        verify(rabbitTemplate).convertAndSend(anyString(), anyString(), any(Object.class));
+        verify(sqsOperations).send(anyString(), any(Object.class));
     }
 
     @Test
