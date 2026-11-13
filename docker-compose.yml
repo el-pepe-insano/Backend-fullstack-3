@@ -57,6 +57,15 @@ services:
     networks:
       - godofgames-net
 
+  mailpit:
+    image: axllent/mailpit:v1.21
+    container_name: mailpit
+    ports:
+      - "8025:8025"
+      - "1025:1025"
+    networks:
+      - godofgames-net
+
   notificaciones-service:
     build: ./Notificaciones
     container_name: notificaciones-service
@@ -65,6 +74,10 @@ services:
     environment:
       MAIL_USERNAME: ${MAIL_USERNAME}
       MAIL_PASSWORD: ${MAIL_PASSWORD}
+      SPRING_MAIL_HOST: mailpit
+      SPRING_MAIL_PORT: 1025
+      SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH: "false"
+      SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE: "false"
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-service:5432/godofgames_notificaciones
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: Bullseye
